@@ -113,15 +113,15 @@ enum Month{
  }
 
  int calcTime(){
-
      int ret_val = 0;
      ret_val += editTime.seconds;
      ret_val += editTime.minute*60;
      ret_val += editTime.hour*3600;
-     ret_val += editTime.day*86400;
+     ret_val += (editTime.day-1)*86400;
      switch(editTime.month){
-default:
-    break;
+     default:
+
+         break;
      case February:
          ret_val += 2678400;
          break;
@@ -504,7 +504,6 @@ interrupt void A2TimerINTR(void)
 
         if(getKey() == '*'){
             intervals = calcTime();
-
             state = Timing;
         }
         LastButtonPressedStatus = buttonStatus;
@@ -515,209 +514,4 @@ interrupt void A2TimerINTR(void)
     }
     Graphics_flushBuffer(&g_sContext);
 }
-
-
-
-// Main
-//void main(void)
-//
-//{
-//    WDTCTL = WDTPW | WDTHOLD;    // Stop watchdog timer. Always need to stop this!!
-//    P1SEL = P1SEL & ~BIT0;          // Select P1.0 for digital IO
-//    P1DIR |= BIT0;
-//    P4SEL = P4SEL & ~BIT7;          // Select P4.7 for digital IO
-//    P4DIR |= BIT7;
-//    unsigned char currKey=0;
-//    configDisplay();
-//    configKeypad();
-//    timerA2config();
-//
-//    while(1){
-//        Graphics_clearDisplay(&g_sContext);
-//        displayTime(intervals);
-//        displayTemp(123.4);
-//        Graphics_flushBuffer(&g_sContext);
-//        swDelay(1);
-//
-//    }
-//    /*unsigned char currKey=0, dispSz = 3;
-//    unsigned char dispThree[3];
-//
-//    // Define some local variables
-//    float a_flt = 190.68;
-//    int  test = 0x0600, i=0;     // In C prefix 0x means the number that follows is in hex
-//    long unsigned X= 123456;    // No prefix so number is assumed to be in decimal
-//    unsigned char myGrade='A';
-//    unsigned char initial='S';
-//    //unsigned char your_name[14] = "Your Name Here";
-//                                    // What happens when you change the array length?
-//                                    // What should it be? Do you need null terminator /n ?
-//
-//
-//    WDTCTL = WDTPW | WDTHOLD;    // Stop watchdog timer. Always need to stop this!!
-//                                 // You can then configure it properly, if desired
-//
-//    // Some utterly useless instructions -- Step through them
-//    // What size does the Code Composer MSP430 Compiler use for the
-//    // following variable types? A float, an int, a long integer and a char?
-//    a_flt = a_flt*test;
-//    X = test+X;
-//    test = test-myGrade;    // A number minus a letter?? What's actually going on here?
-//                            // What value stored in myGrade (i.e. what's the ASCII code for "A")?
-//                            // Thus, what is the new value of test? Explain?
-//
-//    // Useful code starts here
-//    initLeds();
-//
-//    configDisplay();
-//    configKeypad();
-//
-//    // *** Intro Screen ***
-//    Graphics_clearDisplay(&g_sContext); // Clear the display
-//
-//    // Write some text to the display
-//    Graphics_drawStringCentered(&g_sContext, "Welcome", AUTO_STRING_LENGTH, 48, 15, TRANSPARENT_TEXT);
-//    Graphics_drawStringCentered(&g_sContext, "to", AUTO_STRING_LENGTH, 48, 25, TRANSPARENT_TEXT);
-//    Graphics_drawStringCentered(&g_sContext, "ECE2049-C22!", AUTO_STRING_LENGTH, 48, 35, TRANSPARENT_TEXT);
-//
-//    // Draw a box around everything because it looks nice
-//    Graphics_Rectangle box = {.xMin = 5, .xMax = 91, .yMin = 5, .yMax = 91 };
-//    Graphics_drawRectangle(&g_sContext, &box);
-//
-//    // We are now done writing to the display.  However, if we stopped here, we would not
-//    // see any changes on the actual LCD.  This is because we need to send our changes
-//    // to the LCD, which then refreshes the display.
-//    // Since this is a slow operation, it is best to refresh (or "flush") only after
-//    // we are done drawing everything we need.
-//    Graphics_flushBuffer(&g_sContext);
-//
-//    dispThree[0] = ' ';
-//    dispThree[2] = ' ';
-//
-//    while (1)    // Forever loop
-//    {
-//        // Check if any keys have been pressed on the 3x4 keypad
-//        currKey = getKey();
-//        if (currKey == '*')
-//            BuzzerOn();
-//        if (currKey == '#')
-//            BuzzerOff();
-//        if ((currKey >= '0') && (currKey <= '9'))
-//            setLeds(currKey - 0x30);
-//
-//        if (currKey)
-//        {
-//            dispThree[1] = currKey;
-//            // Draw the new character to the display
-//            Graphics_drawStringCentered(&g_sContext, dispThree, dispSz, 48, 55, OPAQUE_TEXT);
-//
-//            // Refresh the display so it shows the new data
-//            Graphics_flushBuffer(&g_sContext);
-//
-//            // wait awhile before clearing LEDs
-//            swDelay(1);
-//            setLeds(0);
-//        }
-//
-//    }  // end while (1)*/
-//}
-
-
-
-//
-//int main(void)
-//{
-//    unsigned int in_value = 0;
-//  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
-//  // Configure P8.0 as digital IO output and set it to 1
-//  // This supplied 3.3 volts across scroll wheel potentiometer
-//  // See schematic at end or MSP-EXP430F5529 board users guide
-//  P6SEL &= ~BIT0;
-//  P6DIR |= BIT0;
-//  P6OUT |= BIT0;
-//  REFCTL0 &= ~REFMSTR;                      // Reset REFMSTR to hand over control
-//                                            // internal reference voltages to
-//                   // ADC12_A control registers
-//  ADC12CTL0 = ADC12SHT0_9 | ADC12ON;
-//
-//  ADC12CTL1 = ADC12SHP;                     // Enable sample timer
-//
-//  // Use ADC12MEM0 register for conversion results
-//  ADC12MCTL0 = ADC12SREF_0 + ADC12INCH_0;   // ADC12INCH0 = Scroll wheel = A0
-//                   // ACD12SREF_0 = Vref+ = Vcc
-//  __delay_cycles(100);                      // delay to allow Ref to settle
-//  ADC12CTL0 |= ADC12ENC;     // Enable conversion
-//  _enable_interrupt();
-//  while(1)
-//  {
-//    ADC12CTL0 &= ~ADC12SC;  // clear the start bit
-//    ADC12CTL0 |= ADC12SC;               // Sampling and conversion start
-//     // Single conversion (single channel)
-//    // Poll busy bit waiting for conversion to complete
-//    while (ADC12CTL1 & ADC12BUSY)
-//     __no_operation();
-//    in_value = ADC12MEM0;               // Read results if conversion done
-//    __no_operation();                       // SET BREAKPOINT HERE
-//  }
-//}
-
-
-
-
-
-
-
-//
-//#define CALADC12_15V_30C  *((unsigned int *)0x1A1A)
-//#define CALADC12_15V_85C  *((unsigned int *)0x1A1C)
-//int main(void)
-//{
-//    unsigned int in_temp;
-//    unsigned int in_temp_test;
-//  volatile float temperatureDegC;
-//  volatile float temperatureDegF;
-//  volatile float degC_per_bit;
-//  volatile unsigned int bits30, bits85;
-//  WDTCTL = WDTPW + WDTHOLD;      // Stop WDT
-//
-//  REFCTL0 &= ~REFMSTR;    // Reset REFMSTR to hand over control of
-//                          // internal reference voltages to
-//           // ADC12_A control registers
-//
-//  ADC12CTL0 = ADC12SHT0_15 | ADC12REFON | ADC12ON;     // Internal ref = 1.5V
-//
-//  ADC12CTL1 = ADC12SHP | ADC12CONSEQ_1;                     // Enable sample timer
-//
-//  // Using ADC12MEM0 to store reading
-//  ADC12MCTL0 = ADC12SREF_1 | ADC12INCH_10 ;  // ADC i/p ch A10 = temp sense
-//  ADC12MCTL1 = ADC12SREF_0 | ADC12INCH_0 |ADC12EOS ;  // ADC i/p ch A10 = temp sense
-//                                       // ACD12SREF_1 = internal ref = 1.5v
-//  __delay_cycles(100);                    // delay to allow Ref to settle
-//  ADC12CTL0 |= ADC12ENC;              // Enable conversion
-//  // Use calibration data stored in info memory
-//  bits30 = CALADC12_15V_30C;
-//  bits85 = CALADC12_15V_85C;
-//  degC_per_bit = ((float)(85.0 - 30.0))/((float)(bits85-bits30));
-//  while(1)
-//  {
-//    ADC12CTL0 &= ~ADC12SC;  // clear the start bit
-//    ADC12CTL0 |= ADC12SC;       // Sampling and conversion start
-//             // Single conversion (single channel)
-//    // Poll busy bit waiting for conversion to complete
-////    while (ADC12CTL1 & ADC12BUSY)
-////     __no_operation();
-//    in_temp = ADC12MEM0;      // Read in results if conversion
-//    in_temp_test = ADC12MEM1;
-//    // Temperature in Celsius. See the Device Descriptor Table section in the
-//    // System Resets, Interrupts, and Operating Modes, System Control Module
-//    // chapter in the device user's guide for background information on the
-//    // used formula.
-//    temperatureDegC = (float)((long)in_temp - CALADC12_15V_30C) * degC_per_bit
-//+30.0;
-//    // Temperature in Fahrenheit Tf = (9/5)*Tc + 32
-//    temperatureDegF = temperatureDegC * 9.0/5.0 + 32.0;
-//
-//    __no_operation();                       // SET BREAKPOINT HERE
-//  }
-//}
 
