@@ -1,7 +1,7 @@
 #include <msp430.h>
 #include "peripherals.h"
 
-long unsigned int intervals;
+long long int intervals;
 struct time editTime;
 void timerA2config(void)
 {
@@ -17,6 +17,7 @@ enum Editing{
     minute,
     second
 };
+enum Editing currEdit = month;
 void configButtons(void){
     P2SEL &= ~(BIT1);
     P2DIR &= ~(BIT1);
@@ -68,11 +69,10 @@ enum Month{
  char minute;
  char seconds;
  };
- struct time CounterToDate(long unsigned int Time){
+ struct time CounterToDate(long int Time){
      struct time output = {.month = January, .day = 0, .hour = 0, .seconds = 0, .minute = 0};
-     long unsigned int CurrTime = Time; // grab a copy of the current seconds
-     int days = CurrTime/86400;
-     int secondsRemainingInDay = CurrTime%86400;
+     int days = Time/86400;
+     int secondsRemainingInDay = Time%86400;
      bool flag = false;
      output.month = January;
      while(!flag){
@@ -112,8 +112,8 @@ enum Month{
  return output;
  }
 
- int calcTime(){
-     int ret_val = 0;
+ long long int calcTime(struct time editTime){
+     long long int ret_val = 0;
      ret_val += editTime.seconds;
      ret_val += editTime.minute*60;
      ret_val += editTime.hour*3600;
@@ -246,15 +246,17 @@ enum Month{
                disp[6] = ToBeDisplayed.day%10+0x30;
                Graphics_drawStringCentered(&g_sContext, disp, dispSZ, 24, 20, OPAQUE_TEXT);
  }
- void displayTime(long unsigned int inTime){
-     int seconds = (inTime % 60);
-     int minutes = (inTime % 3600) / 60;
-     int hours = (inTime % 86400) / 3600;
+ void displayTime(long int inTime){
+     struct time newTime = CounterToDate(inTime);
+     int seconds = newTime.seconds;
+     int minutes = newTime.minute;
+     int hours = newTime.hour;
      unsigned char Time[10];
      Time[0] = ' ';
      Time[9] = ' ';
      Time[3] = ':';
      Time[6] = ':';
+
      Time[1] = (hours / 10) + 0x30;
      Time[2] = (hours % 10) + 0x30;
 
@@ -265,10 +267,9 @@ enum Month{
      Time[8] = (seconds % 10) + 0x30;
 
 
-     Graphics_drawStringCentered(&g_sContext, Time, 10, 30, 35,
-                                 TRANSPARENT_TEXT);
+     Graphics_drawStringCentered(&g_sContext, Time, 10, 30, 35,TRANSPARENT_TEXT);
 
-     struct time newTime = CounterToDate(inTime);
+
      char disp[8];
      char dispSZ = 8;
      disp[0] = ' ';
@@ -420,25 +421,23 @@ void main(void){
           if(state == Timing){
             if(ReadButtons() == 1){
                 state=Editing;
+                currEdit = month;
                 editTime = CounterToDate(intervals);
             }
-          }
-          if(state == Editing){
-              if(ReadButtons() == 1){
-                  state = Timing;
-              }
           }
       }
 
 }
-enum Editing currEdit = month;
+Graphics_Rectangle Month_box = {.xMin = 4, .xMax = 25, .yMin = 15, .yMax = 25 };
+Graphics_Rectangle Day_box = {.xMin = 27, .xMax = 42, .yMin = 15, .yMax = 25 };
+
 int LastButtonPressedStatus = 0;
 #pragma vector = TIMER2_A0_VECTOR
 interrupt void A2TimerINTR(void)
 {
     if(state == Timing)
     {
-        intervals+= 1;
+        intervals += 1;
     }
     ADC12CTL0 &= ~ADC12SC;  // clear the start bit
     ADC12CTL0 |= ADC12SC;       // Sampling and conversion start
@@ -460,16 +459,27 @@ interrupt void A2TimerINTR(void)
         }
 
     }
-    displayTemp(average);
+    if(average<10){
+        displayTemp(temperatureDegC);
+    }
+    else{
+        displayTemp(average);
+    }
+
+
+
     if(state == Editing){
         int buttonStatus = ReadButtons();
         if(currEdit == month){
             editTime.month = (int)(Scroll_Wheel/345);
-            if(buttonStatus == 2 & LastButtonPressedStatus != 2){
+
+            Graphics_drawRectangle(&g_sContext, &Month_box);
+            if(buttonStatus == 1 & LastButtonPressedStatus != 1){
                 currEdit++;
             }
         }
         else if(currEdit == day){
+            Graphics_drawRectangle(&g_sContext, &Day_box);
             if(editTime.month == September ||  editTime.month == April || editTime.month == June|| editTime.month == November){
                 editTime.day = (int)(Scroll_Wheel/140)+1; //30 days
             }
@@ -479,38 +489,42 @@ interrupt void A2TimerINTR(void)
             else{
                 editTime.day = (int)(Scroll_Wheel/135)+1; //31 days
             }
-            if(buttonStatus == 2 &  LastButtonPressedStatus != 2){
+            if(buttonStatus == 1 &  LastButtonPressedStatus != 1){
                 currEdit++;
             }
         }
         else if(currEdit == hour){
-            editTime.hour = (int)(Scroll_Wheel/170);
-            if(buttonStatus == 2 &  LastButtonPressedStatus != 2){
+            Graphics_drawLineH(&g_sContext, 4,19, 40);
+            editTime.hour = (int)(Scroll_Wheel/171);
+            if(buttonStatus == 1 &  LastButtonPressedStatus != 1){
                 currEdit++;
             }
         }
         else if(currEdit == minute){
+            Graphics_drawLineH(&g_sContext, 22, 39, 40);
             editTime.minute = (int)(Scroll_Wheel/69);
-            if(buttonStatus == 2 &  LastButtonPressedStatus != 2){
+            if(buttonStatus == 1 &  LastButtonPressedStatus != 1){
                 currEdit++;
             }
         }
         else if(currEdit == second){
+            Graphics_drawLineH(&g_sContext, 42, 57, 40);
             editTime.seconds = (int)(Scroll_Wheel/69);
-            if(buttonStatus == 2 &  LastButtonPressedStatus != 2){
+            if(buttonStatus == 1 &  LastButtonPressedStatus != 1){
                 currEdit = month;
             }
         }
-
-        if(getKey() == '*'){
-            intervals = calcTime();
-            state = Timing;
-        }
         LastButtonPressedStatus = buttonStatus;
         displayTimeStruct(editTime);
+
+        if(buttonStatus == 2){
+            intervals = calcTime(editTime);
+            state = Timing;
+        }
     }
     else{
-        displayTime(intervals);
+        editTime = CounterToDate(intervals);
+        displayTimeStruct(editTime);
     }
     Graphics_flushBuffer(&g_sContext);
 }
