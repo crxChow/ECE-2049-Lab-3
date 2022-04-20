@@ -69,10 +69,10 @@ enum Month{
  char minute;
  char seconds;
  };
- struct time CounterToDate(long int Time){
+ struct time CounterToDate(long long int Time){
      struct time output = {.month = January, .day = 0, .hour = 0, .seconds = 0, .minute = 0};
-     int days = Time/86400;
-     int secondsRemainingInDay = Time%86400;
+     long long int days = Time/86400;
+     long long int secondsRemainingInDay = Time%86400;
      bool flag = false;
      output.month = January;
      while(!flag){
@@ -106,18 +106,23 @@ enum Month{
          }
      }
      output.day = days + 1; //we decrement days based on month so the leftover is the day;
-     output.hour = secondsRemainingInDay/3600; //hours are based on how many seconds we have //left in the day
-     output.minute = (secondsRemainingInDay%3600)/60; //knowing how many hours find the //number of minutes into the hour
-     output.seconds = secondsRemainingInDay-output.hour*3600-output.minute*60;//knowing how //many minutes fine the number of seconds we are into the day
+     long long int test = (secondsRemainingInDay/3600);
+     output.hour = (char)test; //hours are based on how many seconds we have //left in the day
+     long long int test1 = (secondsRemainingInDay%3600)/60;
+     output.minute = (char)test1; //knowing how many hours find the //number of minutes into the hour
+     long long int test2 = secondsRemainingInDay-output.hour*3600-output.minute*60;
+     output.seconds = (char)test2;//knowing how //many minutes fine the number of seconds we are into the day
  return output;
  }
 
  long long int calcTime(struct time editTime){
      long long int ret_val = 0;
-     ret_val += editTime.seconds;
-     ret_val += editTime.minute*60;
-     ret_val += editTime.hour*3600;
-     ret_val += (editTime.day-1)*86400;
+     ret_val += (long long int)(editTime.seconds);
+     ret_val += (long long int)(editTime.minute*60);
+     long long int hour = (long long int)editTime.hour;
+     long long int secondsperhour = 3600;
+     ret_val += hour*secondsperhour;
+     ret_val += (long long int)((editTime.day-1)*86400);
      switch(editTime.month){
      default:
 
